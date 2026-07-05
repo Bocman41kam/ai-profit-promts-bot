@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  bot:
+    build: .
+    container_name: ai-profit-bot-dev
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - .:/app
+      - ./data:/app/data
+    ports:
+      - "8080:8080"
+    command: >
+      watchmedo auto-restart
+      --directory=/app
+      --pattern="*.py"
+      --ignore-patterns="*/__pycache__/*;*/.git/*;*/data/*;*/venv/*"
+      --debounce-interval=1
+      --poll
+      --
+      python bot.py
+    environment:
+      - PYTHONUNBUFFERED=1
