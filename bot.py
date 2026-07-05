@@ -36,12 +36,12 @@ router = Router()
 
 DB_PATH = "data/bot.db"
 
-async def main():
-    await init_db()
-    dp.include_router(router)
+bot.py
 
-    # Для Railway используем polling (проще и стабильнее)
-    await dp.start_polling(bot)
+async def init_db():
+    os.makedirs("data", exist_ok=True)
+    async with aiosqlite.connect(DB_PATH) as db:
+        await db.execute("""
             CREATE TABLE IF NOT EXISTS users (
                 user_id INTEGER PRIMARY KEY,
                 username TEXT,
@@ -52,28 +52,6 @@ async def main():
                 created_at TEXT DEFAULT CURRENT_TIMESTAMP
             )
         """)
-        await db.commit()
-
-async def get_user(user_id: int):
-    async with aiosqlite.connect(DB_PATH) as db:
-        db.row_factory = aiosqlite.Row
-        async with db.execute("SELECT * FROM users WHERE user_id = ?", (user_id,)) as cursor:
-            row = await cursor.fetchone()
-            return dict(row) if row else None
-
-async def create_or_update_user(user_id, username, first_name, referrer_id=None):
-    async with aiosqlite.connect(DB_PATH) as db:
-        await db.execute("""
-            INSERT INTO users (user_id, username, first_name, referrer_id, is_premium)
-            VALUES (?, ?, ?, ?, 0)
-            ON CONFLICT(user_id) DO UPDATE SET username = excluded.username, first_name = excluded.first_name
-        """, (user_id, username, first_name, referrer_id))
-        await db.commit()
-
-async def give_premium(user_id, days=30):
-    until = (datetime.now() + timedelta(days=days)).isoformat()
-    async with aiosqlite.connect(DB_PATH) as db:
-        await db.execute("UPDATE users SET is_premium = 1, premium_until = ? WHERE user_id = ?", (until, user_id))
         await db.commit()
 
 async def has_premium(user_id):
