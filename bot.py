@@ -36,10 +36,12 @@ router = Router()
 
 DB_PATH = "data/bot.db"
 
-async def init_db():
-    os.makedirs("data", exist_ok=True)
-    async with aiosqlite.connect(DB_PATH) as db:
-        await db.execute("""
+async def main():
+    await init_db()
+    dp.include_router(router)
+
+    # Для Railway используем polling (проще и стабильнее)
+    await dp.start_polling(bot)
             CREATE TABLE IF NOT EXISTS users (
                 user_id INTEGER PRIMARY KEY,
                 username TEXT,
